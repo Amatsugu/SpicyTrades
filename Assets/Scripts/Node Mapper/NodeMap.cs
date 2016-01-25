@@ -19,11 +19,11 @@ namespace LuminousVector
 		void Start()
 		{
 			int passes = 0;
-			float startTime = 0;
+			System.DateTime startTime;
 			nodes = new List<Node>(nodesToGenerate);
 			//Generate Nodes
 			Debug.Log("Generating Nodes");
-			startTime = Time.time;
+			startTime = System.DateTime.Now;
 			for (int i = 0; i < nodesToGenerate; i++)
 			{
 				if (passes >= maxGenerationCycles)
@@ -53,39 +53,66 @@ namespace LuminousVector
 				return;
 			}
 			else
-				Debug.Log("Generated in " + (Time.time - startTime) + "s with " + passes + " cycles.");
+				Debug.Log("Generated in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms with " + passes + " cycles.");
 			//Connect Nodes
 			Debug.Log("Connecting Nodes");
-			startTime = Time.time;
+			startTime = System.DateTime.Now;
 			passes = 0;
 			int failedConnectionAttempts = 0;
-			while(GetLowestNodeConnections() < minNodeConnections)
+			int nodesConnected = 0;
+			foreach(Node n in nodes)
 			{
+				if (GetLowestNodeConnections() >= minNodeConnections)
+					break;
 				if (failedConnectionAttempts >= connectionAttemptTimeOut)
 					break;
+				if (n.connectionCount >= maxNodeConnections)
+					continue;
 				passes++;
-				Node a = nodes[Random.Range(0, nodesToGenerate - 1)];
-				Node b = nodes[Random.Range(0, nodesToGenerate - 1)];
-				if (a == b)
-					continue;
-				if (Vector2.Distance(a.position, b.position) > maxConnectionDistance)
+				List<Node> cNodes = GetClosestNodes(n);
+				foreach(Node cN in cNodes)
 				{
-					//Debug.Log("Loosening distance constraint");
-					maxConnectionDistance += 0.01f;
-					continue;
+					if (failedConnectionAttempts >= connectionAttemptTimeOut)
+						break;
+					if (cN.connectionCount == maxNodeConnections)
+					{
+						failedConnectionAttempts++;
+						continue;
+					}else
+					{
+						n.AddConnection(cN);
+						failedConnectionAttempts = 0;
+					}
 				}
-				if (a.connectionCount == maxNodeConnections || b.connectionCount == maxNodeConnections)
-				{
-					failedConnectionAttempts++;
-					continue;
-				}
-				a.AddConnection(b);
+				if (failedConnectionAttempts == 0)
+					nodesConnected++;
 				failedConnectionAttempts = 0;
+				
 			}
 			if (failedConnectionAttempts >= connectionAttemptTimeOut)
-				Debug.Log("Failed to connect nodes in required passes.");
+				Debug.Log("Failed to connect nodes in required passes. " + nodesConnected + " nodes connected.");
 			else
-				Debug.Log("Connected all nodes in " + (Time.time - startTime) + "s with " + passes + " passes.");
+				Debug.Log("Connected all nodes in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms with " + passes + " passes.");
+		}
+
+		List<Node> GetClosestNodes(Node node)
+		{
+			List<Node> cNodes = new List<Node>();
+			float d = float.PositiveInfinity;
+			foreach(Node n in nodes)
+			{
+				if (cNodes.Count >= maxNodeConnections)
+					break;
+				if (n == node)
+					continue;
+				float cd = Vector2.Distance(node.position, n.position);
+				if (cd < d)
+				{
+					d = cd;
+					cNodes.Add(n);
+				}
+			}
+			return cNodes;
 		}
 
 		int GetLowestNodeConnections()
