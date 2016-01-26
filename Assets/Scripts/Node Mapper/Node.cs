@@ -8,6 +8,7 @@ namespace LuminousVector
 		//public
 		public Vector2 position { get { return _position; } }
 		public int connectionCount { get { return _nodeConntections.Count; } }
+		public List<Node> getConnections { get { return _nodeConntections; } }
 		//private
 		private Vector2 _position;
 		private List<Node> _nodeConntections;
@@ -78,6 +79,11 @@ namespace LuminousVector
 			if (recur)
 				node.RemoveConnection(this, false);
 			return this;
+		}
+
+		public bool isConnected(Node n)
+		{
+			return _nodeConntections.Contains(n);
 		}
 	}
 }
