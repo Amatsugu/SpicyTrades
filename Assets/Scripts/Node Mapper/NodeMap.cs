@@ -44,7 +44,11 @@ namespace LuminousVector
 
 		void RenderNodeMap()
 		{
+			System.DateTime startTime = System.DateTime.Now;
+			Debug.Log("Rendering map");
+			//Creat the nodeMap Texture
 			nodeMap = new Texture2D(mapWidth * nodeMapResolution, mapHeight * nodeMapResolution, TextureFormat.RGBA32, false);
+			//Clear the texture
 			for(int y = 0; y < nodeMap.height; y++)
 			{
 				for(int x = 0; x < nodeMap.width; x++)
@@ -54,10 +58,12 @@ namespace LuminousVector
 			}
 			nodeMap.wrapMode = TextureWrapMode.Clamp;
 			nodeMap.filterMode = FilterMode.Point;
-			foreach(Node n in nodes)
+			//Draw all nodes
+			foreach (Node n in nodes)
 			{
-				DrawNode((int)n.position.x, (int)n.position.y, 8, n.color);
+				DrawNode((int)n.position.x, (int)n.position.y, 6, n.color);
 			}
+			//Draw all connections
 			foreach(Node n in nodes)
 			{
 				foreach (Node n2 in n.getConnections)
@@ -67,6 +73,7 @@ namespace LuminousVector
 			}
 			nodeMap.Apply();
 			renderOutput.texture = nodeMap;
+			Debug.Log("Finished rendering in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms");
 		}
 
 		void DrawConnection(Vector2 pos1, Vector2 pos2)
@@ -75,7 +82,7 @@ namespace LuminousVector
 			//pos1.y = mapHeight * nodeMapResolution - pos1.y;
 			pos2 *= nodeMapResolution;
 			//pos2.y = mapHeight * nodeMapResolution - pos2.y;
-			VoidUtils.DrawLine(nodeMap, (int)pos1.x, (int)pos1.y, (int)pos2.x, (int)pos2.y, Color.red);
+			VoidUtils.DrawLine(nodeMap, (int)pos1.x, (int)pos1.y, (int)pos2.x, (int)pos2.y, 1, Color.red);
 		}
 
 		void DrawNode(int x, int y, int size, Color color)
@@ -88,16 +95,17 @@ namespace LuminousVector
 
 		void GenerateNodeMap()
 		{
-			GenerateNodes();
+			int generated = GenerateNodes();
 			ConnectNodes();
-			CleanUpExtraNodes();
+			CleanUpExtraNodes(generated);
 		}
 
 		
 
-		void GenerateNodes()
+		int GenerateNodes()
 		{
 			int cycles = 0;
+			int nodesGenerated = 0;
 			System.DateTime startTime;
 			nodes = new List<Node>(nodesToGenerate);
 			//Generate Nodes
@@ -109,17 +117,21 @@ namespace LuminousVector
 					break;
 				bool validNode = true;
 				Node node;
+				//Create a node
 				if (Random.Range(0, 4) == 1)
 					node = new Town(new Vector2(Random.Range(0, mapWidth), Random.Range(0, mapHeight)));
 				else
 					node = new Village(new Vector2(Random.Range(0, mapWidth), Random.Range(0, mapHeight)));
+				//Constrain node to the mapTexture
 				int x, y;
 				TransformToMapTexPos(node.position, out x, out y);
 				if(mapTexture.GetPixel(x,y) == Color.clear)
 				{
-					i--;
+					i--; //Go back a step and skip next tests
+					cycles++;
 					continue;
 				}
+				//Make sure the new node isn't too close to another ndoe
 				if (i != 0)
 				{
 					foreach (Node n in nodes)
@@ -132,20 +144,26 @@ namespace LuminousVector
 					}
 				}
 				if (validNode)
-					nodes.Add(node.Init(maxNodeConnections));
+				{
+					nodes.Add(node.Init(maxNodeConnections, maxConnectionDistance));
+					nodesGenerated++;
+				}
 				else
-					i--;
+					i--; //Go back a step incase of invalid node
 				cycles++;
 			}
+			//Determine the outcome of node generation
 			if (cycles >= maxGenerationCycles)
 			{
-				Debug.Log("Failed to generate nodes in required cycles");
-				return;
+				Debug.LogWarning("Failed to generate nodes in required cycles. " + nodesGenerated + " nodes generated.");
+				return nodesGenerated;
 			}
 			else
-				Debug.Log("Generated in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms with " + cycles + " cycles.");
+				Debug.Log("Generated " + nodesGenerated + " nodes in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms with " + cycles + " cycles.");
+			return nodesGenerated;
 		}
 
+		//Transform node coordinate to maptexture coordinate (lossy)
 		void TransformToMapTexPos(Vector2 pos, out int x, out int y)
 		{
 			pos.x /= mapWidth;
@@ -164,42 +182,57 @@ namespace LuminousVector
 			int nodesConnected = 0;
 			foreach (Node n in nodes)
 			{
+				//Stop connectiing if there are no nodes with 0 connections
 				if (GetLowestNodeConnections() >= minNodeConnections)
 					break;
+				//Stop connecting if too many attempts were made
 				if (failedConnectionAttempts >= connectionAttemptTimeOut)
 					break;
+				//Stop if the current node already has the maximum number of connections
 				if (n.connectionCount >= n.maxConnections)
 					continue;
+				//Find the closest nodes to the current node
 				List<Node> cNodes = GetClosestNodes(n);
 				foreach (Node cN in cNodes)
 				{
+
+					//Stop connecting if too many attempts were made
 					if (failedConnectionAttempts >= connectionAttemptTimeOut)
 						break;
-					if (Vector2.Distance(n.position, cN.position) > maxConnectionDistance)
+					//Check if the candidate nodes are within range
+					float d = Vector2.Distance(n.position, cN.position);
+					if (d > n.connectionRange && d > cN.connectionRange)
 						continue;
+					//Stop connecting once current node has reached max connections
+					if (n.connectionCount == n.maxConnections)
+						break;
+					//Skip this candidate node if it already has max connections
 					if (cN.connectionCount == cN.maxConnections)
 					{
 						failedConnectionAttempts++;
 						continue;
 					}
-					else
+					else //Connect the nodes and reset the attempts counter
 					{
 						n.AddConnection(cN);
 						failedConnectionAttempts = 0;
 					}
 					passes++;
 				}
+
 				if (failedConnectionAttempts == 0)
 					nodesConnected++;
 				failedConnectionAttempts = 0;
 
 			}
+			//Determine the results of the node connection process
 			if (failedConnectionAttempts >= connectionAttemptTimeOut)
-				Debug.Log("Failed to connect nodes in required passes. " + nodesConnected + " nodes connected.");
+				Debug.LogError("Failed to connect nodes in required passes. " + nodesConnected + " nodes connected.");
 			else
 				Debug.Log("Connected all nodes in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms with " + passes + " passes.");
 		}
 
+		//Find the closest nodes to a given node
 		List<Node> GetClosestNodes(Node node)
 		{
 			List<Node> cNodes = new List<Node>();
@@ -223,6 +256,7 @@ namespace LuminousVector
 			return cNodes;
 		}
 
+		//Get the count of the node with the lowest number of connections
 		int GetLowestNodeConnections()
 		{
 			int min = 0;
@@ -235,7 +269,8 @@ namespace LuminousVector
 			return min;
 		}
 
-		void CleanUpExtraNodes()
+		//Discard nodes that were not connected to another node
+		void CleanUpExtraNodes(int generated)
 		{
 			int discarded = 0;
 			List<Node> remvoeList = new List<Node>();
@@ -252,7 +287,7 @@ namespace LuminousVector
 				nodes.Remove(n);
 			}
 			remvoeList.Clear();
-			Debug.Log(discarded + " of " + nodesToGenerate + " nodes discarded.");
+			Debug.Log(discarded + " of " + generated + " nodes discarded.");
 		}
 	}
 }

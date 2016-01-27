@@ -9,16 +9,20 @@ namespace LuminousVector
 		public Vector2 position { get { return _position; } }
 		public int connectionCount { get { return _nodeConntections.Count; } }
 		public int maxConnections { get { return _maxConnections; } }
+		public float connectionRange { get { return _connectionRange * _rangeMultiplier; } }
 		public List<Node> getConnections { get { return _nodeConntections; } }
 		public Color color = Color.cyan;
 		//private
 		private Vector2 _position;
 		protected List<Node> _nodeConntections;
 		protected int _maxConnections;
+		protected float _connectionRange;
+		protected float _rangeMultiplier = 1;
 
-		public Node Init(int maxConnections)
+		public Node Init(int maxConnections, float connectionRange)
 		{
 			_maxConnections = maxConnections;
+			_connectionRange = connectionRange;
 			_nodeConntections = new List<Node>(maxConnections);
 			OnInit();
 			return this;
@@ -55,7 +59,7 @@ namespace LuminousVector
 				Debug.LogWarning("Node: too many node connections");
 				return this;
 			}
-			if (node.connectionCount == _maxConnections && recur)
+			if (node.connectionCount == node.maxConnections && recur)
 			{
 				Debug.LogWarning("Node: target node has too many connections");
 				return this;

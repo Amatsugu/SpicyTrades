@@ -28,7 +28,7 @@ namespace LuminousVector
 			}
 		}
 
-		public static void DrawLine(Texture2D tex, int x0, int y0, int x1, int y1, Color col)
+		public static void DrawLine(Texture2D tex, int x0, int y0, int x1, int y1, int thickness, Color col)
 		{
 			int dy = (int)(y1 - y0);
 			int dx = (int)(x1 - x0);
@@ -42,8 +42,8 @@ namespace LuminousVector
 			dx <<= 1;
 
 			float fraction = 0;
-
-			tex.SetPixel(x0, y0, col);
+			DrawCircle(tex, x0, y0, thickness, col);
+			//tex.SetPixel(x0, y0, col);
 			if (dx > dy)
 			{
 				fraction = dy - (dx >> 1);
@@ -56,7 +56,8 @@ namespace LuminousVector
 					}
 					x0 += stepx;
 					fraction += dy;
-					tex.SetPixel(x0, y0, col);
+					DrawCircle(tex, x0, y0, thickness, col);
+					//tex.SetPixel(x0, y0, col);
 				}
 			}
 			else {
@@ -70,7 +71,8 @@ namespace LuminousVector
 					}
 					y0 += stepy;
 					fraction += dx;
-					tex.SetPixel(x0, y0, col);
+					DrawCircle(tex, x0, y0, thickness, col);
+					//tex.SetPixel(x0, y0, col);
 				}
 			}
 		}

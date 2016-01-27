@@ -14,8 +14,7 @@ namespace LuminousVector
 
 		protected override void OnInit()
 		{
-			//Debug.Log("town");
-			color = Color.blue;
+			_rangeMultiplier = 1.5f;
 		}
 	}
 }
