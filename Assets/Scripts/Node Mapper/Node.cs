@@ -3,30 +3,35 @@ using System.Collections.Generic;
 
 namespace LuminousVector
 {
-	public class Node
+	public abstract class Node
 	{
 		//public
 		public Vector2 position { get { return _position; } }
 		public int connectionCount { get { return _nodeConntections.Count; } }
+		public int maxConnections { get { return _maxConnections; } }
 		public List<Node> getConnections { get { return _nodeConntections; } }
+		public Color color = Color.cyan;
 		//private
 		private Vector2 _position;
-		private List<Node> _nodeConntections;
-		private int _maxConnections;
+		protected List<Node> _nodeConntections;
+		protected int _maxConnections;
 
 		public Node Init(int maxConnections)
 		{
 			_maxConnections = maxConnections;
 			_nodeConntections = new List<Node>(maxConnections);
+			OnInit();
 			return this;
 		}
+
+		protected abstract void OnInit();
 
 		public Node(Vector2 position)
 		{
 			_position = position;
 		}
 
-		//Clear Connections
+		//Clear all Connections to this node
 		public Node ClearConnections(bool recur)
 		{
 			if (_nodeConntections.Count == 0)
@@ -43,7 +48,6 @@ namespace LuminousVector
 		{
 			return AddConnection(node, true);
 		}
-
 		public Node AddConnection(Node node, bool recur)
 		{
 			if (_nodeConntections.Count == _maxConnections)
@@ -81,6 +85,7 @@ namespace LuminousVector
 			return this;
 		}
 
+		//Check if a given node has a connection to this node
 		public bool isConnected(Node n)
 		{
 			return _nodeConntections.Contains(n);

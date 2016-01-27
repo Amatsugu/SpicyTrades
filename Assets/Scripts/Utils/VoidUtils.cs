@@ -74,5 +74,12 @@ namespace LuminousVector
 				}
 			}
 		}
+
+		Texture2D GetHeightMap(Texture2D input)
+		{
+			Texture2D heightmap = new Texture2D(input.height, input.width, TextureFormat.Alpha8, false);
+			heightmap.SetPixels(input.GetPixels());
+			return heightmap;
+		}
 	}
 }

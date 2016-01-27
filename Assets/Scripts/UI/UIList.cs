@@ -18,11 +18,8 @@ namespace LuminousVector
 		public bool alignOnStart;
 		public bool invertDirection;
 		public bool alignChildren;
-		//Private
-		private Vector2 _curPos;
 		void Start ()
 		{
-			_curPos = transform.position;
 			if(alignOnStart)
 				Align();
 		}

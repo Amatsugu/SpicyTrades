@@ -64,6 +64,8 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Node Mapper\Node.cs" />
     <Compile Include="Assets\Scripts\Node Mapper\NodeMap.cs" />
+    <Compile Include="Assets\Scripts\Node Mapper\Town.cs" />
+    <Compile Include="Assets\Scripts\Node Mapper\Village.cs" />
     <Compile Include="Assets\Scripts\UI\NodeMapUI.cs" />
     <Compile Include="Assets\Scripts\UI\UIFitSquare.cs" />
     <Compile Include="Assets\Scripts\UI\UIList.cs" />

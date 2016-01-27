@@ -16,6 +16,7 @@ namespace LuminousVector
 		public int minNodeConnections = 1;
 		public int maxNodeConnections = 3;
 		public int connectionAttemptTimeOut = 20;
+		public Texture2D mapTexture;
 		public Texture2D nodeMap;
 		public int nodeMapResolution = 8;
 		public RawImage renderOutput;
@@ -43,12 +44,19 @@ namespace LuminousVector
 
 		void RenderNodeMap()
 		{
-			nodeMap = new Texture2D(mapHeight * nodeMapResolution, mapWidth * nodeMapResolution, TextureFormat.RGBA32, false);
+			nodeMap = new Texture2D(mapWidth * nodeMapResolution, mapHeight * nodeMapResolution, TextureFormat.RGBA32, false);
+			for(int y = 0; y < nodeMap.height; y++)
+			{
+				for(int x = 0; x < nodeMap.width; x++)
+				{
+					nodeMap.SetPixel(x, y, Color.clear);
+				}
+			}
 			nodeMap.wrapMode = TextureWrapMode.Clamp;
 			nodeMap.filterMode = FilterMode.Point;
 			foreach(Node n in nodes)
 			{
-				DrawNode((int)n.position.x, (int)n.position.y, 8);
+				DrawNode((int)n.position.x, (int)n.position.y, 8, n.color);
 			}
 			foreach(Node n in nodes)
 			{
@@ -64,18 +72,18 @@ namespace LuminousVector
 		void DrawConnection(Vector2 pos1, Vector2 pos2)
 		{
 			pos1 *= nodeMapResolution;
-			pos1.y = mapHeight * nodeMapResolution - pos1.y;
+			//pos1.y = mapHeight * nodeMapResolution - pos1.y;
 			pos2 *= nodeMapResolution;
-			pos2.y = mapHeight * nodeMapResolution - pos2.y;
+			//pos2.y = mapHeight * nodeMapResolution - pos2.y;
 			VoidUtils.DrawLine(nodeMap, (int)pos1.x, (int)pos1.y, (int)pos2.x, (int)pos2.y, Color.red);
 		}
 
-		void DrawNode(int x, int y, int size)
+		void DrawNode(int x, int y, int size, Color color)
 		{
 			x *= nodeMapResolution;
 			y *= nodeMapResolution;
-			y = nodeMapResolution * mapHeight - y;
-			VoidUtils.DrawCircle(nodeMap, x, y, size, Color.cyan);
+			//y = nodeMapResolution * mapHeight - y;
+			VoidUtils.DrawCircle(nodeMap, x, y, size, color);
 		}
 
 		void GenerateNodeMap()
@@ -100,7 +108,18 @@ namespace LuminousVector
 				if (cycles >= maxGenerationCycles)
 					break;
 				bool validNode = true;
-				Node node = new Node(new Vector2(Random.Range(0, mapWidth), Random.Range(0, mapHeight)));
+				Node node;
+				if (Random.Range(0, 4) == 1)
+					node = new Town(new Vector2(Random.Range(0, mapWidth), Random.Range(0, mapHeight)));
+				else
+					node = new Village(new Vector2(Random.Range(0, mapWidth), Random.Range(0, mapHeight)));
+				int x, y;
+				TransformToMapTexPos(node.position, out x, out y);
+				if(mapTexture.GetPixel(x,y) == Color.clear)
+				{
+					i--;
+					continue;
+				}
 				if (i != 0)
 				{
 					foreach (Node n in nodes)
@@ -127,6 +146,14 @@ namespace LuminousVector
 				Debug.Log("Generated in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms with " + cycles + " cycles.");
 		}
 
+		void TransformToMapTexPos(Vector2 pos, out int x, out int y)
+		{
+			pos.x /= mapWidth;
+			pos.y /= mapHeight;
+			x = (int)(pos.x * mapTexture.width);
+			y = (int)(pos.y * mapTexture.height);
+		}
+
 		void ConnectNodes()
 		{
 			//Connect Nodes
@@ -141,7 +168,7 @@ namespace LuminousVector
 					break;
 				if (failedConnectionAttempts >= connectionAttemptTimeOut)
 					break;
-				if (n.connectionCount >= maxNodeConnections)
+				if (n.connectionCount >= n.maxConnections)
 					continue;
 				List<Node> cNodes = GetClosestNodes(n);
 				foreach (Node cN in cNodes)
@@ -150,7 +177,7 @@ namespace LuminousVector
 						break;
 					if (Vector2.Distance(n.position, cN.position) > maxConnectionDistance)
 						continue;
-					if (cN.connectionCount == maxNodeConnections)
+					if (cN.connectionCount == cN.maxConnections)
 					{
 						failedConnectionAttempts++;
 						continue;
@@ -186,7 +213,7 @@ namespace LuminousVector
 				float cd = Vector2.Distance(node.position, n.position);
 				if(cd < d)
 				{
-					if (cNodes.Count >= maxNodeConnections)
+					if (cNodes.Count >= node.maxConnections)
 						cNodes.RemoveAt(0);
 					d = cd;
 					cNodes.Add(n);
