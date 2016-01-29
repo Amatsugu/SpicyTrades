@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Node Mapper\Node.cs" />
+    <Compile Include="Assets\Scripts\Node Mapper\NodeConnection.cs" />
     <Compile Include="Assets\Scripts\Node Mapper\NodeMap.cs" />
     <Compile Include="Assets\Scripts\Node Mapper\Town.cs" />
     <Compile Include="Assets\Scripts\Node Mapper\Village.cs" />

@@ -6,9 +6,9 @@ namespace LuminousVector
 {
 	public class NodeMap : MonoBehaviour
 	{
+		//Public
 		public int nodesToGenerate = 50;
 		public int maxGenerationCycles = 1000;
-		public List<Node> nodes;
 		public int mapHeight = 100;
 		public int mapWidth = 100;
 		public float minNodeDistance = 3;
@@ -21,6 +21,10 @@ namespace LuminousVector
 		public int nodeMapResolution = 8;
 		public RawImage renderOutput;
 		public bool regenerate = false;
+
+		//Private
+		private List<Node> _nodes;
+		private List<NodeConnection> _nodeConnections;
 
 		void Start()
 		{
@@ -59,16 +63,16 @@ namespace LuminousVector
 			nodeMap.wrapMode = TextureWrapMode.Clamp;
 			nodeMap.filterMode = FilterMode.Point;
 			//Draw all nodes
-			foreach (Node n in nodes)
+			foreach (Node n in _nodes)
 			{
 				DrawNode((int)n.position.x, (int)n.position.y, 6, n.color);
 			}
 			//Draw all connections
-			foreach(Node n in nodes)
+			foreach(Node n in _nodes)
 			{
-				foreach (Node n2 in n.getConnections)
+				foreach (NodeConnection nc in _nodeConnections)
 				{
-					DrawConnection(n.position, n2.position);
+					DrawConnection(nc.n1.position, nc.n2.position);
 				}
 			}
 			nodeMap.Apply();
@@ -107,7 +111,7 @@ namespace LuminousVector
 			int cycles = 0;
 			int nodesGenerated = 0;
 			System.DateTime startTime;
-			nodes = new List<Node>(nodesToGenerate);
+			_nodes = new List<Node>(nodesToGenerate);
 			//Generate Nodes
 			Debug.Log("Generating Nodes");
 			startTime = System.DateTime.Now;
@@ -134,7 +138,7 @@ namespace LuminousVector
 				//Make sure the new node isn't too close to another ndoe
 				if (i != 0)
 				{
-					foreach (Node n in nodes)
+					foreach (Node n in _nodes)
 					{
 						if (Vector2.Distance(n.position, node.position) < minNodeDistance)
 						{
@@ -145,7 +149,7 @@ namespace LuminousVector
 				}
 				if (validNode)
 				{
-					nodes.Add(node.Init(maxNodeConnections, maxConnectionDistance));
+					_nodes.Add(node.Init(maxNodeConnections, maxConnectionDistance));
 					nodesGenerated++;
 				}
 				else
@@ -175,12 +179,13 @@ namespace LuminousVector
 		void ConnectNodes()
 		{
 			//Connect Nodes
+			_nodeConnections = new List<NodeConnection>();
 			Debug.Log("Connecting Nodes");
 			System.DateTime startTime = System.DateTime.Now;
 			int passes = 0;
 			int failedConnectionAttempts = 0;
 			int nodesConnected = 0;
-			foreach (Node n in nodes)
+			foreach (Node n in _nodes)
 			{
 				//Stop connectiing if there are no nodes with 0 connections
 				if (GetLowestNodeConnections() >= minNodeConnections)
@@ -189,7 +194,7 @@ namespace LuminousVector
 				if (failedConnectionAttempts >= connectionAttemptTimeOut)
 					break;
 				//Stop if the current node already has the maximum number of connections
-				if (n.connectionCount >= n.maxConnections)
+				if (GetConnectionCount(n) >= n.maxConnections)
 					continue;
 				//Find the closest nodes to the current node
 				List<Node> cNodes = GetClosestNodes(n);
@@ -204,17 +209,17 @@ namespace LuminousVector
 					if (d > n.connectionRange && d > cN.connectionRange)
 						continue;
 					//Stop connecting once current node has reached max connections
-					if (n.connectionCount == n.maxConnections)
+					if (GetConnectionCount(n) == n.maxConnections)
 						break;
 					//Skip this candidate node if it already has max connections
-					if (cN.connectionCount == cN.maxConnections)
+					if (GetConnectionCount(cN) == cN.maxConnections)
 					{
 						failedConnectionAttempts++;
 						continue;
 					}
 					else //Connect the nodes and reset the attempts counter
 					{
-						n.AddConnection(cN);
+						_nodeConnections.Add(new NodeConnection(n, cN));
 						failedConnectionAttempts = 0;
 					}
 					passes++;
@@ -237,9 +242,9 @@ namespace LuminousVector
 		{
 			List<Node> cNodes = new List<Node>();
 			float d = float.PositiveInfinity;
-			foreach(Node n in nodes)
+			foreach(Node n in _nodes)
 			{
-				if (n.isConnected(node))
+				if (NodeisConnected(node, n))
 					continue;
 				if (n == node)
 					continue;
@@ -256,13 +261,32 @@ namespace LuminousVector
 			return cNodes;
 		}
 
+		//Check if a given node has a connection to this node
+		public bool NodeisConnected(Node n1, Node n2)
+		{
+			NodeConnection nc = new NodeConnection(n1, n2);
+			return _nodeConnections.Contains(nc);
+		}
+
+		//Get the number of connections that involve a node
+		public int GetConnectionCount(Node n)
+		{
+			int c = 0;
+			foreach(NodeConnection nc in _nodeConnections)
+			{
+				if (nc.isConnected(n))
+					c++;
+			}
+			return c;
+		}
+
 		//Get the count of the node with the lowest number of connections
 		int GetLowestNodeConnections()
 		{
 			int min = 0;
-			foreach(Node n in nodes)
+			foreach(Node n in _nodes)
 			{
-				min = (n.connectionCount < min) ? n.connectionCount : min;
+				min = (GetConnectionCount(n) < min) ? GetConnectionCount(n) : min;
 				//if (min == 0)
 				//	break;
 			}
@@ -274,9 +298,9 @@ namespace LuminousVector
 		{
 			int discarded = 0;
 			List<Node> remvoeList = new List<Node>();
-			foreach (Node n in nodes)
+			foreach (Node n in _nodes)
 			{
-				if (n.connectionCount == 0)
+				if (GetConnectionCount(n) == 0)
 				{
 					discarded++;
 					remvoeList.Add(n);
@@ -284,7 +308,7 @@ namespace LuminousVector
 			}
 			foreach (Node n in remvoeList)
 			{
-				nodes.Remove(n);
+				_nodes.Remove(n);
 			}
 			remvoeList.Clear();
 			Debug.Log(discarded + " of " + generated + " nodes discarded.");
