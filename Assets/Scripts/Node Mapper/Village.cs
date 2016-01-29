@@ -20,6 +20,7 @@ namespace LuminousVector
 			color = Color.magenta;
 			_maxConnections = 4;
 			_rangeMultiplier = 0.8f;
+			_nodeConntections = new List<Node>(_maxConnections);
 		}
 	}
 }
