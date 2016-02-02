@@ -6,6 +6,25 @@ namespace LuminousVector
 {
 	public class NodeMap : MonoBehaviour
 	{
+
+		private static NodeMap NODE_MAP;
+
+		public static NodeMap instance
+		{
+			get
+			{
+				if (!NODE_MAP)
+				{
+					NODE_MAP = FindObjectOfType<NodeMap>() as NodeMap;
+					if (!NODE_MAP)
+					{
+						Debug.LogError("No Event Manager found");
+					}
+				}
+				return NODE_MAP;
+			}
+		}
+
 		public int nodesToGenerate = 50;
 		public int maxGenerationCycles = 1000;
 		public List<Node> nodes;
@@ -16,7 +35,7 @@ namespace LuminousVector
 		public int minNodeConnections = 1;
 		public int maxNodeConnections = 3;
 		public int connectionAttemptTimeOut = 20;
-		public Texture2D mapTexture;
+		public Texture2D heightMapTexture;
 		public Texture2D nodeMap;
 		public int nodeMapResolution = 8;
 		public RawImage renderOutput;
@@ -30,6 +49,7 @@ namespace LuminousVector
 		public void Generate()
 		{
 			GenerateNodeMap();
+			EventManager.TriggerEvent(GameEvents.NODE_MAP_GENERATED);
 			RenderNodeMap();
 		}
 
@@ -40,6 +60,11 @@ namespace LuminousVector
 				Generate();
 				regenerate = false;
 			}
+		}
+
+		public static List<Node> GetNodes()
+		{
+			return instance.nodes;
 		}
 
 		void RenderNodeMap()
@@ -125,7 +150,7 @@ namespace LuminousVector
 				//Constrain node to the mapTexture
 				int x, y;
 				TransformToMapTexPos(node.position, out x, out y);
-				if(mapTexture.GetPixel(x,y) == Color.clear)
+				if(heightMapTexture.GetPixel(x,y) == Color.clear)
 				{
 					i--; //Go back a step and skip next tests
 					cycles++;
@@ -168,8 +193,8 @@ namespace LuminousVector
 		{
 			pos.x /= mapWidth;
 			pos.y /= mapHeight;
-			x = (int)(pos.x * mapTexture.width);
-			y = (int)(pos.y * mapTexture.height);
+			x = (int)(pos.x * heightMapTexture.width);
+			y = (int)(pos.y * heightMapTexture.height);
 		}
 
 		void ConnectNodes()

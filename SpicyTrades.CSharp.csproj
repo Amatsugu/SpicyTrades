@@ -62,6 +62,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Camera\CameraController.cs" />
+    <Compile Include="Assets\Scripts\Events\EventManager.cs" />
+    <Compile Include="Assets\Scripts\Events\GameEvents.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\PlayField.cs" />
     <Compile Include="Assets\Scripts\Node Mapper\Node.cs" />
     <Compile Include="Assets\Scripts\Node Mapper\NodeMap.cs" />
     <Compile Include="Assets\Scripts\Node Mapper\Town.cs" />
