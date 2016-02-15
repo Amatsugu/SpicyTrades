@@ -1,7 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpicyTrades.CSharp.Plugins", "SpicyTrades.CSharp.Plugins.csproj", "{6AFF1565-0D8B-C28B-B448-8C2AFFE9C13A}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpicyTrades.CSharp", "SpicyTrades.CSharp.csproj", "{CC1ECCA2-91E0-E7B2-FF91-9D83693F33CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpicyTrades.CSharp.Editor", "SpicyTrades.CSharp.Editor.csproj", "{1956EFAD-1C54-1456-2D7C-0FECA2EC8B9A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +13,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6AFF1565-0D8B-C28B-B448-8C2AFFE9C13A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AFF1565-0D8B-C28B-B448-8C2AFFE9C13A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AFF1565-0D8B-C28B-B448-8C2AFFE9C13A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AFF1565-0D8B-C28B-B448-8C2AFFE9C13A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CC1ECCA2-91E0-E7B2-FF91-9D83693F33CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CC1ECCA2-91E0-E7B2-FF91-9D83693F33CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC1ECCA2-91E0-E7B2-FF91-9D83693F33CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC1ECCA2-91E0-E7B2-FF91-9D83693F33CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1956EFAD-1C54-1456-2D7C-0FECA2EC8B9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1956EFAD-1C54-1456-2D7C-0FECA2EC8B9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1956EFAD-1C54-1456-2D7C-0FECA2EC8B9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1956EFAD-1C54-1456-2D7C-0FECA2EC8B9A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

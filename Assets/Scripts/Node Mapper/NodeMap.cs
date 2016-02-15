@@ -39,7 +39,12 @@ namespace LuminousVector
 		public Texture2D nodeMap;
 		public int nodeMapResolution = 8;
 		public RawImage renderOutput;
+		public bool renderNodeMap = true;
 		public bool regenerate = false;
+		public Terrain terrain;
+
+		private Color[] _colors;
+		private int _w, _h;
 
 		void Start()
 		{
@@ -48,9 +53,11 @@ namespace LuminousVector
 
 		public void Generate()
 		{
+			GenerateTerrain();
 			GenerateNodeMap();
-			EventManager.TriggerEvent(GameEvents.NODE_MAP_GENERATED);
-			RenderNodeMap();
+			EventManager.TriggerEvent(GameEvent.NODE_MAP_GENERATED);
+			if(renderNodeMap)
+				RenderNodeMap();
 		}
 
 		void Update()
@@ -67,18 +74,36 @@ namespace LuminousVector
 			return instance.nodes;
 		}
 
+		void GenerateTerrain()
+		{
+			TerrainGeneratorConfig config = new TerrainGeneratorConfig();
+			config.width= mapWidth * nodeMapResolution;
+			config.height = mapHeight * nodeMapResolution;
+			config.scale = new Vector2(1, 1);
+			config.origin = Vector2.zero;
+			TerrainGenerator terrainGen = new TerrainGenerator(config);
+			float[,] heightMap;
+			terrainGen.CreateHeightMap(out heightMap);
+			TerrainData terData = terrain.terrainData;
+			terData.heightmapResolution = config.height;
+			terData.SetHeights(0, 0, heightMap);
+		}
+
 		void RenderNodeMap()
 		{
 			System.DateTime startTime = System.DateTime.Now;
 			Debug.Log("Rendering map");
 			//Creat the nodeMap Texture
 			nodeMap = new Texture2D(mapWidth * nodeMapResolution, mapHeight * nodeMapResolution, TextureFormat.RGBA32, false);
+			_w = nodeMap.width;
+			_h = nodeMap.height;
+			_colors = new Color[_w * _h];
 			//Clear the texture
 			for(int y = 0; y < nodeMap.height; y++)
 			{
 				for(int x = 0; x < nodeMap.width; x++)
 				{
-					nodeMap.SetPixel(x, y, Color.clear);
+					_colors[_w * y + x] = Color.clear;
 				}
 			}
 			nodeMap.wrapMode = TextureWrapMode.Clamp;
@@ -96,6 +121,7 @@ namespace LuminousVector
 					DrawConnection(n.position, n2.position);
 				}
 			}
+			nodeMap.SetPixels(_colors);
 			nodeMap.Apply();
 			renderOutput.texture = nodeMap;
 			Debug.Log("Finished rendering in " + System.DateTime.Now.Subtract(startTime).TotalMilliseconds + "ms");
@@ -107,7 +133,7 @@ namespace LuminousVector
 			//pos1.y = mapHeight * nodeMapResolution - pos1.y;
 			pos2 *= nodeMapResolution;
 			//pos2.y = mapHeight * nodeMapResolution - pos2.y;
-			VoidUtils.DrawLine(nodeMap, (int)pos1.x, (int)pos1.y, (int)pos2.x, (int)pos2.y, 1, Color.red);
+			_colors = VoidUtils.DrawLine(_colors, _w, _h, (int)pos1.x, (int)pos1.y, (int)pos2.x, (int)pos2.y, 1, Color.red);
 		}
 
 		void DrawNode(int x, int y, int size, Color color)
@@ -115,7 +141,7 @@ namespace LuminousVector
 			x *= nodeMapResolution;
 			y *= nodeMapResolution;
 			//y = nodeMapResolution * mapHeight - y;
-			VoidUtils.DrawCircle(nodeMap, x, y, size, color);
+			_colors = VoidUtils.DrawCircle(_colors, _w, _h, x, y, size, color);
 		}
 
 		void GenerateNodeMap()

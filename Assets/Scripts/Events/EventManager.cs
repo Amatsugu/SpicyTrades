@@ -7,7 +7,7 @@ namespace LuminousVector
 {
 	public class EventManager : MonoBehaviour
 	{
-		private Dictionary<string, UnityEvent> eventDictionary;
+		private Dictionary<GameEvent, UnityEvent> eventDictionary;
 
 		private static EventManager EVENT_MANAGER;
 
@@ -48,14 +48,14 @@ namespace LuminousVector
 		{
 			if (eventDictionary == null)
 			{
-				eventDictionary = new Dictionary<string, UnityEvent>();
+				eventDictionary = new Dictionary<GameEvent, UnityEvent>();
 			}
 		}
 
-		public static void StartListening(string eventName, UnityAction listener)
+		public static void StartListening(GameEvent @event, UnityAction listener)
 		{
 			UnityEvent thisEvent = null;
-			if (instance.eventDictionary.TryGetValue(eventName, out thisEvent))
+			if (instance.eventDictionary.TryGetValue(@event, out thisEvent))
 			{
 				thisEvent.AddListener(listener);
 			}
@@ -63,25 +63,25 @@ namespace LuminousVector
 			{
 				thisEvent = new UnityEvent();
 				thisEvent.AddListener(listener);
-				instance.eventDictionary.Add(eventName, thisEvent);
+				instance.eventDictionary.Add(@event, thisEvent);
 			}
 		}
 
-		public static void StopListening(string eventName, UnityAction listener)
+		public static void StopListening(GameEvent @event, UnityAction listener)
 		{
 			if (EVENT_MANAGER == null)
 				return;
 			UnityEvent thisEvent = null;
-			if (instance.eventDictionary.TryGetValue(eventName, out thisEvent))
+			if (instance.eventDictionary.TryGetValue(@event, out thisEvent))
 			{
 				thisEvent.RemoveListener(listener);
 			}
 		}
 
-		public static void TriggerEvent(string eventName)
+		public static void TriggerEvent(GameEvent @event)
 		{
 			UnityEvent thisEvent = null;
-			if (instance.eventDictionary.TryGetValue(eventName, out thisEvent))
+			if (instance.eventDictionary.TryGetValue(@event, out thisEvent))
 			{
 				thisEvent.Invoke();
 			}

@@ -15,9 +15,25 @@ namespace LuminousVector
 		public InputField minNodeConnections;
 		public InputField maxNodeConnections;
 		public InputField connectionAttemptTimeOut;
+		public bool renderNodeMap
+		{
+			get
+			{
+				return _renderNodeMap;
+			}
+			set
+			{
+				_renderNodeMap = value;
+				if (map == null)
+					Start();
+				map.renderNodeMap = value;
+				nodeMapResolution.interactable = value;
+			}
+		}
 		public InputField nodeMapResolution;
 
 		private NodeMap map;
+		private bool _renderNodeMap;
 
 		void Start()
 		{

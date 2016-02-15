@@ -12,12 +12,12 @@ namespace LuminousVector
 
 		void Start ()
 		{
-			EventManager.StartListening(GameEvents.NODE_MAP_GENERATED, CreatePlayField);
+			EventManager.StartListening(GameEvent.NODE_MAP_GENERATED, CreatePlayField);
 		}
 
 		void CreatePlayField()
 		{
-			EventManager.StopListening(GameEvents.NODE_MAP_GENERATED, CreatePlayField);
+			EventManager.StopListening(GameEvent.NODE_MAP_GENERATED, CreatePlayField);
 			nodes = NodeMap.GetNodes();
 
 		}

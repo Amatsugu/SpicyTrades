@@ -4,7 +4,7 @@ namespace LuminousVector
 {
 	public class VoidUtils
 	{
-		public static void DrawCircle(Texture2D tex, int cx, int cy, int r, Color col)
+		public static Color[] DrawCircle(Color[] colors, int w, int h, int cx, int cy, int r, Color col)
 		{
 			int x, y, px, nx, py, ny, d;
 
@@ -18,17 +18,37 @@ namespace LuminousVector
 					py = cy + y;
 					ny = cy - y;
 
-					tex.SetPixel(px, py, col);
-					tex.SetPixel(nx, py, col);
+					if (py > h || py < 0)
+						continue;
+					if (ny > h || ny < 0)
+						continue;
 
-					tex.SetPixel(px, ny, col);
-					tex.SetPixel(nx, ny, col);
+					if (nx > w || nx < 0)
+						continue;
+					if (px > w || px < 0)
+						continue;
+				
+
+					colors[w * py + px] = col;
+					colors[w * py + nx] = col;
+
+					
+					
+					colors[w * ny + px] = col;
+					colors[w * ny + nx] = col;
+
+					//tex.SetPixel(px, py, col);
+					//tex.SetPixel(nx, py, col);
+
+					//tex.SetPixel(px, ny, col);
+					//tex.SetPixel(nx, ny, col);
 
 				}
 			}
+			return colors;
 		}
 
-		public static void DrawLine(Texture2D tex, int x0, int y0, int x1, int y1, int thickness, Color col)
+		public static Color[] DrawLine(Color[] colors, int w, int h, int x0, int y0, int x1, int y1, int thickness, Color col)
 		{
 			int dy = (int)(y1 - y0);
 			int dx = (int)(x1 - x0);
@@ -42,7 +62,7 @@ namespace LuminousVector
 			dx <<= 1;
 
 			float fraction = 0;
-			DrawCircle(tex, x0, y0, thickness, col);
+			colors = DrawCircle(colors, w, h, x0, y0, thickness, col);
 			//tex.SetPixel(x0, y0, col);
 			if (dx > dy)
 			{
@@ -56,7 +76,7 @@ namespace LuminousVector
 					}
 					x0 += stepx;
 					fraction += dy;
-					DrawCircle(tex, x0, y0, thickness, col);
+					colors = DrawCircle(colors, w, h, x0, y0, thickness, col);
 					//tex.SetPixel(x0, y0, col);
 				}
 			}
@@ -71,10 +91,11 @@ namespace LuminousVector
 					}
 					y0 += stepy;
 					fraction += dx;
-					DrawCircle(tex, x0, y0, thickness, col);
+					colors = DrawCircle(colors, w, h, x0, y0, thickness, col);
 					//tex.SetPixel(x0, y0, col);
 				}
 			}
+			return colors;
 		}
 
 		Texture2D GetHeightMap(Texture2D input)

@@ -34,7 +34,7 @@ namespace LuminousVector
 				RectTransform[] el = GetComponentsInChildren<RectTransform>();
 				foreach(RectTransform e in el)
 				{
-					if (e.parent == transform)
+					if (e.parent == transform && e.gameObject.activeInHierarchy)
 						elements.Add(e);
 				}
 			}
