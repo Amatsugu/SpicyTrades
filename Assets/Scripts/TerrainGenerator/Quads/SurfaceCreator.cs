@@ -8,6 +8,7 @@ namespace LuminousVector
 	{
 		[Range(1, 200)]
 		public int resolution = 10;
+		public float gridSize = 1;
 		[Range(0f, 1f)]
 		public float strength = 1;
 		public bool coloredStrength;
@@ -28,6 +29,7 @@ namespace LuminousVector
 
 		private Mesh _mesh;
 		private int _currentResolution;
+		private float _curSize;
 		private Vector3[] _vertices;
 		private Vector3[] _normals;
 		private Color[] _vertColors;
@@ -47,7 +49,7 @@ namespace LuminousVector
 
 		public void Refresh()
 		{
-			if (resolution != _currentResolution)
+			if (resolution != _currentResolution || gridSize != _curSize)
 				CreateGrid();
 			Quaternion q = Quaternion.Euler(rotation);
 			Vector3 p00 = q * transform.TransformPoint(new Vector3(-.5f, -.5f)) + offset;
@@ -66,15 +68,15 @@ namespace LuminousVector
 				{
 					Vector3 p = Vector3.Lerp(p0, p1, x * stepSize);
 					float sample = Noise.Sum(method, p, frequency, octaves, lacunarity, persistence);
-					sample = (type == NoiseMethodType.Value) ? (sample - .5f) : (sample * .5f);
+					sample = (type == NoiseMethodType.Value) ? (sample - .5f) * gridSize : (sample * gridSize/2);
 					if(coloredStrength)
 					{
-						_vertColors[v] = coloring.Evaluate(sample + .5f);
+						_vertColors[v] = coloring.Evaluate(sample/gridSize + .5f);
 						sample *= amplitude;
 					}else
 					{
 						sample *= amplitude;
-						_vertColors[v] = coloring.Evaluate(sample + .5f);
+						_vertColors[v] = coloring.Evaluate(sample/gridSize + .5f);
 					}
 					_vertices[v].y = sample;
 				}
@@ -87,12 +89,15 @@ namespace LuminousVector
 		private void CreateGrid()
 		{
 			_currentResolution = resolution;
+			if (gridSize <= 0)
+				gridSize = 1;
+			_curSize = gridSize;
 			_mesh.Clear();
 			_vertices = new Vector3[(resolution + 1) * (resolution + 1)];
 			Vector2[] uv = new Vector2[_vertices.Length];
 			_normals = new Vector3[_vertices.Length];
 			_vertColors = new Color[_vertices.Length];
-			float stepSize = 1f / resolution;
+			float stepSize = (float)gridSize / resolution;
 			for(int v = 0, z = 0; z <= resolution; z++)
 			{
 				for (int x = 0; x <= resolution; x++, v++)
